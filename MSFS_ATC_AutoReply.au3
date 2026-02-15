@@ -128,8 +128,8 @@ Func CreateGUI()
     GUICtrlSetFont(-1, 10, 600)
     
     ; Interval Controls
-    GUICtrlCreateLabel("Interval (ms):", 10, 185, 100, 20)
-    $g_idIntervalEdit = GUICtrlCreateInput($g_iInterval, 120, 182, 100, 22, $ES_NUMBER)
+    GUICtrlCreateLabel("Interval (seconds):", 10, 185, 100, 20)
+    $g_idIntervalEdit = GUICtrlCreateInput($g_iInterval/1000, 120, 182, 100, 22, $ES_NUMBER)
     $g_idApplyBtn = GUICtrlCreateButton("Apply", 230, 180, 70, 25)
     
     ; Action Buttons
@@ -170,11 +170,12 @@ Func UpdateGUI()
 EndFunc
 
 Func ApplyInterval()
-    Local $iNewVal = Int(GUICtrlRead($g_idIntervalEdit))
+    Local $iNewVal = Number(GUICtrlRead($g_idIntervalEdit))
     
     If $iNewVal > 0 Then
-        $g_iInterval = $iNewVal
-        GUICtrlSetData($g_idIntervalEdit, $g_iInterval)
+        ; Convert seconds to milliseconds
+        $g_iInterval = $iNewVal * 1000
+        GUICtrlSetData($g_idIntervalEdit, $iNewVal)
         
         ; Update timer if already running
         If $g_bEnabled Then
@@ -182,7 +183,7 @@ Func ApplyInterval()
             AdlibRegister("PressEnter", $g_iInterval)
         EndIf
         
-        ShowNotification("Interval Updated", "New interval: " & $g_iInterval & " ms (" & Round($g_iInterval/1000, 1) & " seconds)", "success")
+        ShowNotification("Interval Updated", "New interval: " & $iNewVal & " seconds", "success")
     Else
         ShowNotification("Invalid Interval", "Please enter a positive number", "error")
     EndIf
@@ -376,7 +377,7 @@ Func Toggle()
     $g_bEnabled = Not $g_bEnabled
     
     If $g_bEnabled Then
-        ShowNotification("ATC Auto-Reply Started", "Pressing Enter every " & Round($g_iInterval/1000, 1) & " seconds", "success")
+        ShowNotification("ATC Auto-Reply Started", "Pressing Enter every " & ($g_iInterval/1000) & " seconds", "success")
         AdlibRegister("PressEnter", $g_iInterval)
     Else
         ShowNotification("ATC Auto-Reply Stopped", "Auto-reply has been disabled", "warning")

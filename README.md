@@ -79,7 +79,7 @@ This AutoIt script automatically responds to ATC in Microsoft Flight Simulator 2
 
 1. **Start MSFS 2024** first
 2. **Run the script** (either .au3 or .exe)
-3. **Set your desired interval** (e.g., 10000 = 10 seconds)
+3. **Set your desired interval** (e.g., 10 = 10 seconds)
 4. **Click "Apply"** to save the interval
 5. **Click "Start ATC Auto-Reply"** or press **Ctrl+F8**
 6. The script will now automatically press Enter at your set interval
@@ -114,8 +114,10 @@ You can modify these values at the top of the script:
 Global Const $WINDOW_TITLE = "Microsoft Flight Simulator 2024"
 Global Const $WINDOW_CLASS = "AceApp"
 Global Const $TOGGLE_HOTKEY = "^{F8}"  ; Ctrl+F8
-Global $g_iInterval = 10000             ; 10 seconds
+Global Const $DEFAULT_INTERVAL = 10000  ; 10 seconds (in milliseconds internally)
 ```
+
+**Note:** The GUI displays and accepts seconds, but the script uses milliseconds internally for precision.
 
 ## Troubleshooting
 
@@ -155,8 +157,10 @@ Examples:
 ### Adjust Default Interval
 Edit this line:
 ```autoit
-Global $g_iInterval = 10000  ; milliseconds
+Global Const $DEFAULT_INTERVAL = 10000  ; milliseconds (10 seconds)
 ```
+
+Remember: The GUI displays seconds, but the code uses milliseconds internally.
 
 ## Credits
 - **Original Concept & Design**: Wicket
