@@ -43,8 +43,8 @@ Global Const $NOTIFICATION_FADE_STEP = 25
 Global Const $NOTIFICATION_FADE_DELAY = 20
 
 ; Performance Settings
-Global Const $MAIN_LOOP_SLEEP_ACTIVE = 50    ; Reduced CPU when active
-Global Const $MAIN_LOOP_SLEEP_INACTIVE = 200 ; More aggressive sleep when idle
+Global Const $MAIN_LOOP_SLEEP_ACTIVE = 10    ; Fast response when active
+Global Const $MAIN_LOOP_SLEEP_INACTIVE = 50  ; Still responsive when idle
 Global Const $WINDOW_CACHE_TIME = 5000       ; Cache window handle for 5 seconds
 
 ; ===============================================================================
@@ -76,14 +76,9 @@ Func Main()
     CreateGUI()
     HotKeySet($TOGGLE_HOTKEY, "Toggle")
     
-    Local $iLastGUICheck = TimerInit()
-    
     While 1
-        ; Only process GUI events every 50ms instead of constantly
-        If TimerDiff($iLastGUICheck) > 50 Then
-            ProcessGUIEvents()
-            $iLastGUICheck = TimerInit()
-        EndIf
+        ; Process GUI events immediately for responsive interface
+        ProcessGUIEvents()
         
         ; Dynamic sleep based on state
         Sleep($g_bEnabled ? $MAIN_LOOP_SLEEP_ACTIVE : $MAIN_LOOP_SLEEP_INACTIVE)
