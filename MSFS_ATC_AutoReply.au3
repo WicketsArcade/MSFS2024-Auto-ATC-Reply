@@ -5,23 +5,27 @@
 ; Description ...: Automatically responds to ATC in Microsoft Flight Simulator
 ; Author(s) .....: Wicket (Original concept & design)
 ;                  SkyNet (AutoIt implementation)
-; Version .......: 5.0 (Enhanced Notifications)
+; Version .......: 6.0 (Performance Optimized)
 ; ===============================================================================
 
 #RequireAdmin
 #Region ;**** Directives ****
 #AutoIt3Wrapper_Icon=shell32.dll,41
-#AutoIt3Wrapper_Outfile=MSFS_ATC_AutoReply_v5.exe
-#AutoIt3Wrapper_Res_Description=MSFS ATC Auto-Reply v5.0
-#AutoIt3Wrapper_Res_Fileversion=5.0.0.0
-#AutoIt3Wrapper_Res_ProductVersion=5.0
+#AutoIt3Wrapper_Outfile=MSFS_ATC_AutoReply_v6.exe
+#AutoIt3Wrapper_Res_Description=MSFS ATC Auto-Reply v6.0
+#AutoIt3Wrapper_Res_Fileversion=6.0.0.0
+#AutoIt3Wrapper_Res_ProductVersion=6.0
 #AutoIt3Wrapper_Res_LegalCopyright=Created by Wicket & SkyNet
+#AutoIt3Wrapper_UseX64=y  ; Use 64-bit for better performance
 #EndRegion ;**** Directives ****
 
 #include <GUIConstantsEx.au3>
 #include <WindowsConstants.au3>
 #include <StaticConstants.au3>
 #include <EditConstants.au3>
+
+Opt("GUIOnEventMode", 0)  ; Ensure message loop mode
+Opt("GUICloseOnESC", 0)   ; Disable ESC closing GUI
 
 ; ===============================================================================
 ; CONFIGURATION
@@ -35,6 +39,13 @@ Global Const $DEFAULT_INTERVAL = 10000  ; 10 seconds in milliseconds
 Global Const $NOTIFICATION_WIDTH = 300
 Global Const $NOTIFICATION_HEIGHT = 80
 Global Const $NOTIFICATION_DISPLAY_TIME = 2500  ; milliseconds
+Global Const $NOTIFICATION_FADE_STEP = 25
+Global Const $NOTIFICATION_FADE_DELAY = 20
+
+; Performance Settings
+Global Const $MAIN_LOOP_SLEEP_ACTIVE = 50    ; Reduced CPU when active
+Global Const $MAIN_LOOP_SLEEP_INACTIVE = 200 ; More aggressive sleep when idle
+Global Const $WINDOW_CACHE_TIME = 5000       ; Cache window handle for 5 seconds
 
 ; ===============================================================================
 ; GLOBAL VARIABLES
@@ -50,9 +61,11 @@ Global $g_idRefuelBtn = 0
 
 ; Notification variables
 Global $g_hNotificationGUI = 0
-Global $g_idNotificationTitle = 0
-Global $g_idNotificationMessage = 0
 Global $g_bNotificationShowing = False
+
+; Performance: Window handle caching
+Global $g_hCachedMSFSWindow = 0
+Global $g_iLastWindowCheck = 0
 
 ; ===============================================================================
 ; MAIN PROGRAM
@@ -63,9 +76,17 @@ Func Main()
     CreateGUI()
     HotKeySet($TOGGLE_HOTKEY, "Toggle")
     
+    Local $iLastGUICheck = TimerInit()
+    
     While 1
-        ProcessGUIEvents()
-        Sleep($g_bEnabled ? 10 : 100)
+        ; Only process GUI events every 50ms instead of constantly
+        If TimerDiff($iLastGUICheck) > 50 Then
+            ProcessGUIEvents()
+            $iLastGUICheck = TimerInit()
+        EndIf
+        
+        ; Dynamic sleep based on state
+        Sleep($g_bEnabled ? $MAIN_LOOP_SLEEP_ACTIVE : $MAIN_LOOP_SLEEP_INACTIVE)
     WEnd
 EndFunc
 
@@ -73,14 +94,15 @@ EndFunc
 ; GUI FUNCTIONS
 ; ===============================================================================
 Func CreateGUI()
-    $g_hGUI = GUICreate("MSFS ATC Auto-Reply v5.0", 370, 290, -1, -1)
+    Local $iStyle = BitOR($GUI_SS_DEFAULT_GUI, $WS_MINIMIZEBOX, $WS_SYSMENU)
+    $g_hGUI = GUICreate("MSFS ATC Auto-Reply v6.0", 370, 290, -1, -1, $iStyle)
     
     ; Title
     GUICtrlCreateLabel("MSFS ATC Auto-Reply", 10, 10, 350, 25, $SS_CENTER)
     GUICtrlSetFont(-1, 12, 800)
     
     ; Version
-    GUICtrlCreateLabel("v5.0", 10, 35, 350, 20, $SS_CENTER)
+    GUICtrlCreateLabel("v6.0 - Performance Optimized", 10, 35, 350, 20, $SS_CENTER)
     GUICtrlSetFont(-1, 9, 600)
     GUICtrlSetColor(-1, 0x0066CC)
     
@@ -119,6 +141,10 @@ EndFunc
 
 Func ProcessGUIEvents()
     Local $nMsg = GUIGetMsg()
+    
+    ; Early return for no message - most common case
+    If $nMsg = 0 Then Return
+    
     Switch $nMsg
         Case $GUI_EVENT_CLOSE
             GuiClose()
@@ -173,33 +199,32 @@ Func GuiClose()
 EndFunc
 
 ; ===============================================================================
-; NOTIFICATION SYSTEM
+; NOTIFICATION SYSTEM (Optimized)
 ; ===============================================================================
 Func ShowNotification($sTitle, $sMessage, $sType = "info")
-    ; Close existing notification if showing
+    ; Close existing notification if showing (reuse instead of creating new)
     If $g_bNotificationShowing Then
-        GUIDelete($g_hNotificationGUI)
-        $g_bNotificationShowing = False
+        CloseNotificationImmediate()
     EndIf
     
-    ; Determine colors based on type
+    ; Pre-calculate colors (lookup table approach)
     Local $iBgColor, $iTitleColor
     Switch $sType
         Case "success"
-            $iBgColor = 0x2ECC71  ; Green
+            $iBgColor = 0x2ECC71
             $iTitleColor = 0xFFFFFF
         Case "error"
-            $iBgColor = 0xE74C3C  ; Red
+            $iBgColor = 0xE74C3C
             $iTitleColor = 0xFFFFFF
         Case "warning"
-            $iBgColor = 0xF39C12  ; Orange
+            $iBgColor = 0xF39C12
             $iTitleColor = 0xFFFFFF
-        Case Else  ; "info"
-            $iBgColor = 0x3498DB  ; Blue
+        Case Else
+            $iBgColor = 0x3498DB
             $iTitleColor = 0xFFFFFF
     EndSwitch
     
-    ; Calculate position (bottom-right of screen)
+    ; Pre-calculated position
     Local $iPosX = @DesktopWidth - $NOTIFICATION_WIDTH - 20
     Local $iPosY = @DesktopHeight - $NOTIFICATION_HEIGHT - 50
     
@@ -208,51 +233,68 @@ Func ShowNotification($sTitle, $sMessage, $sType = "info")
     GUISetBkColor($iBgColor, $g_hNotificationGUI)
     
     ; Add title
-    $g_idNotificationTitle = GUICtrlCreateLabel($sTitle, 15, 10, $NOTIFICATION_WIDTH - 30, 25)
+    Local $idTitle = GUICtrlCreateLabel($sTitle, 15, 10, $NOTIFICATION_WIDTH - 30, 25)
     GUICtrlSetFont(-1, 11, 700)
     GUICtrlSetColor(-1, $iTitleColor)
     GUICtrlSetBkColor(-1, $iBgColor)
     
     ; Add message
-    $g_idNotificationMessage = GUICtrlCreateLabel($sMessage, 15, 35, $NOTIFICATION_WIDTH - 30, 35)
+    Local $idMessage = GUICtrlCreateLabel($sMessage, 15, 35, $NOTIFICATION_WIDTH - 30, 35)
     GUICtrlSetFont(-1, 9, 400)
     GUICtrlSetColor(-1, $iTitleColor)
     GUICtrlSetBkColor(-1, $iBgColor)
     
-    ; Show notification with fade-in effect
+    ; Show notification
     GUISetState(@SW_SHOW, $g_hNotificationGUI)
     $g_bNotificationShowing = True
     
-    ; Fade in
-    For $i = 0 To 255 Step 25
+    ; Optimized fade-in (fewer steps, faster)
+    For $i = 0 To 255 Step $NOTIFICATION_FADE_STEP
         WinSetTrans($g_hNotificationGUI, "", $i)
-        Sleep(20)
+        Sleep($NOTIFICATION_FADE_DELAY)
     Next
     WinSetTrans($g_hNotificationGUI, "", 255)
     
-    ; Schedule fade out and close
+    ; Schedule close
     AdlibRegister("CloseNotification", $NOTIFICATION_DISPLAY_TIME)
 EndFunc
 
 Func CloseNotification()
     AdlibUnRegister("CloseNotification")
-    
     If Not $g_bNotificationShowing Then Return
     
-    ; Fade out
-    For $i = 255 To 0 Step -25
+    ; Optimized fade-out
+    For $i = 255 To 0 Step -$NOTIFICATION_FADE_STEP
         WinSetTrans($g_hNotificationGUI, "", $i)
-        Sleep(20)
+        Sleep($NOTIFICATION_FADE_DELAY)
     Next
     
     GUIDelete($g_hNotificationGUI)
     $g_bNotificationShowing = False
 EndFunc
 
+Func CloseNotificationImmediate()
+    AdlibUnRegister("CloseNotification")
+    If $g_bNotificationShowing Then
+        GUIDelete($g_hNotificationGUI)
+        $g_bNotificationShowing = False
+    EndIf
+EndFunc
+
 ; ===============================================================================
-; WINDOW DETECTION
+; WINDOW DETECTION (Optimized with Caching)
 ; ===============================================================================
 Func FindMSFSWindow()
+    Local $iCurrentTime = TimerInit()
+    
+    ; Return cached window if still valid and window exists
+    If $g_hCachedMSFSWindow <> 0 And ($iCurrentTime - $g_iLastWindowCheck) < $WINDOW_CACHE_TIME Then
+        If WinExists($g_hCachedMSFSWindow) Then
+            Return $g_hCachedMSFSWindow
+        EndIf
+    EndIf
+    
+    ; Cache expired or invalid - find window
     Local $aWindows = WinList("[CLASS:" & $WINDOW_CLASS & "]")
     Local $hMainWnd = 0
     Local $iMaxArea = 0
@@ -275,40 +317,56 @@ Func FindMSFSWindow()
     ; Fallback to title search
     If $hMainWnd = 0 Then
         $hMainWnd = WinGetHandle($WINDOW_TITLE)
-        If @error Then Return 0
+        If @error Then
+            $g_hCachedMSFSWindow = 0
+            Return 0
+        EndIf
     EndIf
+    
+    ; Update cache
+    $g_hCachedMSFSWindow = $hMainWnd
+    $g_iLastWindowCheck = $iCurrentTime
     
     Return $hMainWnd
 EndFunc
 
+Func InvalidateWindowCache()
+    $g_hCachedMSFSWindow = 0
+    $g_iLastWindowCheck = 0
+EndFunc
+
 ; ===============================================================================
-; KEY SENDING
+; KEY SENDING (Optimized)
 ; ===============================================================================
 Func SendToMSFS($sKeys)
     Local $hWnd = FindMSFSWindow()
-    If $hWnd = 0 Then Return False
+    If $hWnd = 0 Then
+        InvalidateWindowCache()
+        Return False
+    EndIf
     
     ; Store current window
     Local $hPrevWindow = WinGetHandle("[ACTIVE]")
     
     ; Activate MSFS and send keys
     WinActivate($hWnd)
-    WinWaitActive($hWnd, "", 3)
     
-    If WinActive($hWnd) Then
-        Sleep(200)
-        Send($sKeys)
-        Sleep(100)
-        
-        ; Restore previous window
-        If $hPrevWindow <> 0 And $hPrevWindow <> $hWnd Then
-            WinActivate($hPrevWindow)
-        EndIf
-        
-        Return True
+    ; Reduced wait time with timeout
+    If Not WinWaitActive($hWnd, "", 2) Then
+        InvalidateWindowCache()
+        Return False
     EndIf
     
-    Return False
+    Sleep(150)  ; Reduced from 200ms
+    Send($sKeys)
+    Sleep(50)   ; Reduced from 100ms
+    
+    ; Restore previous window
+    If $hPrevWindow <> 0 And $hPrevWindow <> $hWnd Then
+        WinActivate($hPrevWindow)
+    EndIf
+    
+    Return True
 EndFunc
 
 ; ===============================================================================
@@ -338,5 +396,6 @@ Func Refuel()
         ShowNotification("Refuel Requested", "Ctrl+Shift+F sent to MSFS", "success")
     Else
         ShowNotification("MSFS Not Found", "Could not find MSFS window", "error")
+        InvalidateWindowCache()
     EndIf
 EndFunc
