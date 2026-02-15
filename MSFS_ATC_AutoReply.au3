@@ -1,22 +1,26 @@
 ; ===============================================================================
-; Title .........: MSFS ATC Auto-Reply
+; Title .........: MSFS ATC Auto-Reply (Experimental Background Mode)
 ; AutoIt Version : 3.3.16.1 or higher
 ; Language ......: English
-; Description ...: Automatically responds to ATC in Microsoft Flight Simulator
+; Description ...: EXPERIMENTAL - Attempts multiple methods for background input
 ; Author(s) .....: Wicket (Original concept & design)
 ;                  SkyNet (AutoIt implementation)
-; Version .......: 6.0 (Performance Optimized)
+; Version .......: 6.1 (Experimental)
+; ===============================================================================
+;
+; WARNING: This is experimental and may not work with MSFS 2024
+; The game actively blocks background input for security reasons
 ; ===============================================================================
 
 #RequireAdmin
 #Region ;**** Directives ****
 #AutoIt3Wrapper_Icon=shell32.dll,41
-#AutoIt3Wrapper_Outfile=MSFS_ATC_AutoReply_v6.exe
-#AutoIt3Wrapper_Res_Description=MSFS ATC Auto-Reply v6.0
-#AutoIt3Wrapper_Res_Fileversion=6.0.0.0
-#AutoIt3Wrapper_Res_ProductVersion=6.0
+#AutoIt3Wrapper_Outfile=MSFS_ATC_AutoReply_v6_Experimental.exe
+#AutoIt3Wrapper_Res_Description=MSFS ATC Auto-Reply v6.1 Experimental
+#AutoIt3Wrapper_Res_Fileversion=6.1.0.0
+#AutoIt3Wrapper_Res_ProductVersion=6.1
 #AutoIt3Wrapper_Res_LegalCopyright=Created by Wicket & SkyNet
-#AutoIt3Wrapper_UseX64=y  ; Use 64-bit for better performance
+#AutoIt3Wrapper_UseX64=y
 #EndRegion ;**** Directives ****
 
 #include <GUIConstantsEx.au3>
@@ -24,28 +28,37 @@
 #include <StaticConstants.au3>
 #include <EditConstants.au3>
 
-Opt("GUIOnEventMode", 0)  ; Ensure message loop mode
-Opt("GUICloseOnESC", 0)   ; Disable ESC closing GUI
+Opt("GUIOnEventMode", 0)
+Opt("GUICloseOnESC", 0)
 
 ; ===============================================================================
 ; CONFIGURATION
 ; ===============================================================================
 Global Const $WINDOW_TITLE = "Microsoft Flight Simulator 2024"
 Global Const $WINDOW_CLASS = "AceApp"
-Global Const $TOGGLE_HOTKEY = "^{F8}"  ; Ctrl+F8
-Global Const $DEFAULT_INTERVAL = 10000  ; 10 seconds in milliseconds
+Global Const $TOGGLE_HOTKEY = "^{F8}"
+Global Const $DEFAULT_INTERVAL = 10000
 
 ; Notification Settings
 Global Const $NOTIFICATION_WIDTH = 300
 Global Const $NOTIFICATION_HEIGHT = 80
-Global Const $NOTIFICATION_DISPLAY_TIME = 2500  ; milliseconds
+Global Const $NOTIFICATION_DISPLAY_TIME = 2500
 Global Const $NOTIFICATION_FADE_STEP = 25
 Global Const $NOTIFICATION_FADE_DELAY = 20
 
 ; Performance Settings
-Global Const $MAIN_LOOP_SLEEP_ACTIVE = 10    ; Fast response when active
-Global Const $MAIN_LOOP_SLEEP_INACTIVE = 50  ; Still responsive when idle
-Global Const $WINDOW_CACHE_TIME = 5000       ; Cache window handle for 5 seconds
+Global Const $MAIN_LOOP_SLEEP_ACTIVE = 10
+Global Const $MAIN_LOOP_SLEEP_INACTIVE = 50
+Global Const $WINDOW_CACHE_TIME = 5000
+
+; Background Input Methods (will try in order)
+Global Enum $METHOD_CONTROLSEND = 0, $METHOD_POSTMESSAGE, $METHOD_SENDMESSAGE, $METHOD_SENDINPUT, $METHOD_ACTIVATE
+
+; Virtual Key Codes
+Global Const $VK_RETURN = 0x0D
+Global Const $VK_CONTROL = 0x11
+Global Const $VK_SHIFT = 0x10
+Global Const $VK_F = 0x46
 
 ; ===============================================================================
 ; GLOBAL VARIABLES
@@ -58,6 +71,7 @@ Global $g_idIntervalEdit = 0
 Global $g_idApplyBtn = 0
 Global $g_idToggleBtn = 0
 Global $g_idRefuelBtn = 0
+Global $g_idMethodCombo = 0
 
 ; Notification variables
 Global $g_hNotificationGUI = 0
@@ -66,6 +80,9 @@ Global $g_bNotificationShowing = False
 ; Performance: Window handle caching
 Global $g_hCachedMSFSWindow = 0
 Global $g_iLastWindowCheck = 0
+
+; Current input method
+Global $g_iCurrentMethod = $METHOD_ACTIVATE  ; Default to activation (works 100%)
 
 ; ===============================================================================
 ; MAIN PROGRAM
@@ -77,10 +94,7 @@ Func Main()
     HotKeySet($TOGGLE_HOTKEY, "Toggle")
     
     While 1
-        ; Process GUI events immediately for responsive interface
         ProcessGUIEvents()
-        
-        ; Dynamic sleep based on state
         Sleep($g_bEnabled ? $MAIN_LOOP_SLEEP_ACTIVE : $MAIN_LOOP_SLEEP_INACTIVE)
     WEnd
 EndFunc
@@ -90,16 +104,16 @@ EndFunc
 ; ===============================================================================
 Func CreateGUI()
     Local $iStyle = BitOR($GUI_SS_DEFAULT_GUI, $WS_MINIMIZEBOX, $WS_SYSMENU)
-    $g_hGUI = GUICreate("MSFS ATC Auto-Reply v6.0", 370, 290, -1, -1, $iStyle)
+    $g_hGUI = GUICreate("MSFS ATC Auto-Reply v6.1 (Experimental)", 370, 340, -1, -1, $iStyle)
     
     ; Title
     GUICtrlCreateLabel("MSFS ATC Auto-Reply", 10, 10, 350, 25, $SS_CENTER)
     GUICtrlSetFont(-1, 12, 800)
     
     ; Version
-    GUICtrlCreateLabel("v6.0 - Performance Optimized", 10, 35, 350, 20, $SS_CENTER)
+    GUICtrlCreateLabel("v6.1 - Experimental Background Mode", 10, 35, 350, 20, $SS_CENTER)
     GUICtrlSetFont(-1, 9, 600)
-    GUICtrlSetColor(-1, 0x0066CC)
+    GUICtrlSetColor(-1, 0xFF6600)  ; Orange for experimental
     
     ; Credits
     GUICtrlCreateLabel("Created by Wicket && SkyNet", 10, 55, 350, 20, $SS_CENTER)
@@ -107,9 +121,9 @@ Func CreateGUI()
     
     ; Description
     GUICtrlCreateLabel("Automatically presses Enter at set intervals to reply to ATC.", 10, 75, 350, 20, $SS_CENTER)
-    GUICtrlCreateLabel("Activates MSFS briefly to send keys, then restores focus", 10, 95, 350, 20, $SS_CENTER)
+    GUICtrlCreateLabel("EXPERIMENTAL: Try different input methods below", 10, 95, 350, 20, $SS_CENTER)
     GUICtrlSetFont(-1, 9, 600)
-    GUICtrlSetColor(-1, 0x008800)
+    GUICtrlSetColor(-1, 0xFF6600)
     
     GUICtrlCreateLabel("Refuel button sends Ctrl+Shift+F to the game.", 10, 115, 350, 20, $SS_CENTER)
     
@@ -127,17 +141,25 @@ Func CreateGUI()
     $g_idIntervalEdit = GUICtrlCreateInput($g_iInterval/1000, 120, 182, 100, 22, $ES_NUMBER)
     $g_idApplyBtn = GUICtrlCreateButton("Apply", 230, 180, 70, 25)
     
+    ; Input Method Selection
+    GUICtrlCreateLabel("Input Method:", 10, 220, 100, 20)
+    $g_idMethodCombo = GUICtrlCreateCombo("", 120, 217, 180, 25, 0x0003)  ; CBS_DROPDOWNLIST
+    GUICtrlSetData($g_idMethodCombo, "ControlSend (Background)|PostMessage (Background)|SendMessage (Background)|SendInput (Background)|Activate Window (Reliable)", "Activate Window (Reliable)")
+    
     ; Action Buttons
-    $g_idToggleBtn = GUICtrlCreateButton("Start ATC Auto-Reply", 10, 225, 150, 30)
-    $g_idRefuelBtn = GUICtrlCreateButton("Refuel", 170, 225, 80, 30)
+    $g_idToggleBtn = GUICtrlCreateButton("Start ATC Auto-Reply", 10, 260, 150, 30)
+    $g_idRefuelBtn = GUICtrlCreateButton("Refuel", 170, 260, 80, 30)
+    
+    ; Help text
+    GUICtrlCreateLabel("Try different methods if background mode doesn't work", 10, 300, 350, 20, $SS_CENTER)
+    GUICtrlSetFont(-1, 8, 400)
+    GUICtrlSetColor(-1, 0x666666)
     
     GUISetState(@SW_SHOW)
 EndFunc
 
 Func ProcessGUIEvents()
     Local $nMsg = GUIGetMsg()
-    
-    ; Early return for no message - most common case
     If $nMsg = 0 Then Return
     
     Switch $nMsg
@@ -149,7 +171,28 @@ Func ProcessGUIEvents()
             ApplyInterval()
         Case $g_idRefuelBtn
             Refuel()
+        Case $g_idMethodCombo
+            UpdateInputMethod()
     EndSwitch
+EndFunc
+
+Func UpdateInputMethod()
+    Local $sMethod = GUICtrlRead($g_idMethodCombo)
+    
+    Switch $sMethod
+        Case "ControlSend (Background)"
+            $g_iCurrentMethod = $METHOD_CONTROLSEND
+        Case "PostMessage (Background)"
+            $g_iCurrentMethod = $METHOD_POSTMESSAGE
+        Case "SendMessage (Background)"
+            $g_iCurrentMethod = $METHOD_SENDMESSAGE
+        Case "SendInput (Background)"
+            $g_iCurrentMethod = $METHOD_SENDINPUT
+        Case Else
+            $g_iCurrentMethod = $METHOD_ACTIVATE
+    EndSwitch
+    
+    ShowNotification("Input Method Changed", $sMethod, "info")
 EndFunc
 
 Func UpdateGUI()
@@ -168,11 +211,9 @@ Func ApplyInterval()
     Local $iNewVal = Number(GUICtrlRead($g_idIntervalEdit))
     
     If $iNewVal > 0 Then
-        ; Convert seconds to milliseconds
         $g_iInterval = $iNewVal * 1000
         GUICtrlSetData($g_idIntervalEdit, $iNewVal)
         
-        ; Update timer if already running
         If $g_bEnabled Then
             AdlibUnRegister("PressEnter")
             AdlibRegister("PressEnter", $g_iInterval)
@@ -195,15 +236,13 @@ Func GuiClose()
 EndFunc
 
 ; ===============================================================================
-; NOTIFICATION SYSTEM (Optimized)
+; NOTIFICATION SYSTEM
 ; ===============================================================================
 Func ShowNotification($sTitle, $sMessage, $sType = "info")
-    ; Close existing notification if showing (reuse instead of creating new)
     If $g_bNotificationShowing Then
         CloseNotificationImmediate()
     EndIf
     
-    ; Pre-calculate colors (lookup table approach)
     Local $iBgColor, $iTitleColor
     Switch $sType
         Case "success"
@@ -220,38 +259,31 @@ Func ShowNotification($sTitle, $sMessage, $sType = "info")
             $iTitleColor = 0xFFFFFF
     EndSwitch
     
-    ; Pre-calculated position
     Local $iPosX = @DesktopWidth - $NOTIFICATION_WIDTH - 20
     Local $iPosY = @DesktopHeight - $NOTIFICATION_HEIGHT - 50
     
-    ; Create notification window
     $g_hNotificationGUI = GUICreate("", $NOTIFICATION_WIDTH, $NOTIFICATION_HEIGHT, $iPosX, $iPosY, $WS_POPUP, $WS_EX_TOPMOST + $WS_EX_TOOLWINDOW)
     GUISetBkColor($iBgColor, $g_hNotificationGUI)
     
-    ; Add title
     Local $idTitle = GUICtrlCreateLabel($sTitle, 15, 10, $NOTIFICATION_WIDTH - 30, 25)
     GUICtrlSetFont(-1, 11, 700)
     GUICtrlSetColor(-1, $iTitleColor)
     GUICtrlSetBkColor(-1, $iBgColor)
     
-    ; Add message
     Local $idMessage = GUICtrlCreateLabel($sMessage, 15, 35, $NOTIFICATION_WIDTH - 30, 35)
     GUICtrlSetFont(-1, 9, 400)
     GUICtrlSetColor(-1, $iTitleColor)
     GUICtrlSetBkColor(-1, $iBgColor)
     
-    ; Show notification
     GUISetState(@SW_SHOW, $g_hNotificationGUI)
     $g_bNotificationShowing = True
     
-    ; Optimized fade-in (fewer steps, faster)
     For $i = 0 To 255 Step $NOTIFICATION_FADE_STEP
         WinSetTrans($g_hNotificationGUI, "", $i)
         Sleep($NOTIFICATION_FADE_DELAY)
     Next
     WinSetTrans($g_hNotificationGUI, "", 255)
     
-    ; Schedule close
     AdlibRegister("CloseNotification", $NOTIFICATION_DISPLAY_TIME)
 EndFunc
 
@@ -259,7 +291,6 @@ Func CloseNotification()
     AdlibUnRegister("CloseNotification")
     If Not $g_bNotificationShowing Then Return
     
-    ; Optimized fade-out
     For $i = 255 To 0 Step -$NOTIFICATION_FADE_STEP
         WinSetTrans($g_hNotificationGUI, "", $i)
         Sleep($NOTIFICATION_FADE_DELAY)
@@ -278,24 +309,21 @@ Func CloseNotificationImmediate()
 EndFunc
 
 ; ===============================================================================
-; WINDOW DETECTION (Optimized with Caching)
+; WINDOW DETECTION
 ; ===============================================================================
 Func FindMSFSWindow()
     Local $iCurrentTime = TimerInit()
     
-    ; Return cached window if still valid and window exists
     If $g_hCachedMSFSWindow <> 0 And ($iCurrentTime - $g_iLastWindowCheck) < $WINDOW_CACHE_TIME Then
         If WinExists($g_hCachedMSFSWindow) Then
             Return $g_hCachedMSFSWindow
         EndIf
     EndIf
     
-    ; Cache expired or invalid - find window
     Local $aWindows = WinList("[CLASS:" & $WINDOW_CLASS & "]")
     Local $hMainWnd = 0
     Local $iMaxArea = 0
     
-    ; Find the largest window (main MSFS window, not popup panels)
     For $i = 1 To $aWindows[0][0]
         Local $hWnd = $aWindows[$i][1]
         Local $aPos = WinGetPos($hWnd)
@@ -310,7 +338,6 @@ Func FindMSFSWindow()
         EndIf
     Next
     
-    ; Fallback to title search
     If $hMainWnd = 0 Then
         $hMainWnd = WinGetHandle($WINDOW_TITLE)
         If @error Then
@@ -319,7 +346,6 @@ Func FindMSFSWindow()
         EndIf
     EndIf
     
-    ; Update cache
     $g_hCachedMSFSWindow = $hMainWnd
     $g_iLastWindowCheck = $iCurrentTime
     
@@ -332,7 +358,7 @@ Func InvalidateWindowCache()
 EndFunc
 
 ; ===============================================================================
-; KEY SENDING (Optimized)
+; KEY SENDING - MULTIPLE METHODS
 ; ===============================================================================
 Func SendToMSFS($sKeys)
     Local $hWnd = FindMSFSWindow()
@@ -341,23 +367,69 @@ Func SendToMSFS($sKeys)
         Return False
     EndIf
     
-    ; Store current window
+    ; Try the selected method
+    Local $bSuccess = False
+    Switch $g_iCurrentMethod
+        Case $METHOD_CONTROLSEND
+            $bSuccess = SendViaControlSend($hWnd, $sKeys)
+        Case $METHOD_POSTMESSAGE
+            $bSuccess = SendViaPostMessage($hWnd, $sKeys)
+        Case $METHOD_SENDMESSAGE
+            $bSuccess = SendViaSendMessage($hWnd, $sKeys)
+        Case $METHOD_SENDINPUT
+            $bSuccess = SendViaSendInput($hWnd, $sKeys)
+        Case Else
+            $bSuccess = SendViaActivate($hWnd, $sKeys)
+    EndSwitch
+    
+    Return $bSuccess
+EndFunc
+
+Func SendViaControlSend($hWnd, $sKeys)
+    ControlSend($hWnd, "", "", $sKeys, 0)
+    Return Not @error
+EndFunc
+
+Func SendViaPostMessage($hWnd, $sKeys)
+    If $sKeys = "{ENTER}" Then
+        DllCall("user32.dll", "lresult", "PostMessage", "hwnd", $hWnd, "uint", $WM_KEYDOWN, "wparam", $VK_RETURN, "lparam", 0x001C0001)
+        Sleep(50)
+        DllCall("user32.dll", "lresult", "PostMessage", "hwnd", $hWnd, "uint", $WM_KEYUP, "wparam", $VK_RETURN, "lparam", 0xC01C0001)
+        Return True
+    EndIf
+    Return False
+EndFunc
+
+Func SendViaSendMessage($hWnd, $sKeys)
+    If $sKeys = "{ENTER}" Then
+        DllCall("user32.dll", "lresult", "SendMessage", "hwnd", $hWnd, "uint", $WM_KEYDOWN, "wparam", $VK_RETURN, "lparam", 0x001C0001)
+        Sleep(50)
+        DllCall("user32.dll", "lresult", "SendMessage", "hwnd", $hWnd, "uint", $WM_KEYUP, "wparam", $VK_RETURN, "lparam", 0xC01C0001)
+        Return True
+    EndIf
+    Return False
+EndFunc
+
+Func SendViaSendInput($hWnd, $sKeys)
+    ; SendInput requires window to be in foreground but doesn't use WinActivate
+    ; May work if MSFS is visible but not focused
+    Send($sKeys)
+    Return True
+EndFunc
+
+Func SendViaActivate($hWnd, $sKeys)
     Local $hPrevWindow = WinGetHandle("[ACTIVE]")
     
-    ; Activate MSFS and send keys
     WinActivate($hWnd)
-    
-    ; Reduced wait time with timeout
     If Not WinWaitActive($hWnd, "", 2) Then
         InvalidateWindowCache()
         Return False
     EndIf
     
-    Sleep(150)  ; Reduced from 200ms
+    Sleep(150)
     Send($sKeys)
-    Sleep(50)   ; Reduced from 100ms
+    Sleep(50)
     
-    ; Restore previous window
     If $hPrevWindow <> 0 And $hPrevWindow <> $hWnd Then
         WinActivate($hPrevWindow)
     EndIf
@@ -372,7 +444,8 @@ Func Toggle()
     $g_bEnabled = Not $g_bEnabled
     
     If $g_bEnabled Then
-        ShowNotification("ATC Auto-Reply Started", "Pressing Enter every " & ($g_iInterval/1000) & " seconds", "success")
+        Local $sMethod = GUICtrlRead($g_idMethodCombo)
+        ShowNotification("ATC Auto-Reply Started", "Using: " & $sMethod, "success")
         AdlibRegister("PressEnter", $g_iInterval)
     Else
         ShowNotification("ATC Auto-Reply Stopped", "Auto-reply has been disabled", "warning")
