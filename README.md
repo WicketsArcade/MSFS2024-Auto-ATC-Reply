@@ -8,7 +8,7 @@
 
 **Automatically respond to ATC in Microsoft Flight Simulator 2024**
 
-[Features](#key-features) • [Installation](#installation) • [Usage](#usage) • [Support](#-support-the-project)
+[Features](#-key-features) • [Installation](#-installation) • [Usage](#-usage) • [Support](#-support-the-project)
 
 </div>
 
@@ -27,7 +27,6 @@ If you find this tool useful, consider supporting its development!
 <div align="center">
 
 [![GitHub Sponsor](https://img.shields.io/badge/Sponsor-GitHub-red?style=for-the-badge&logo=github)](https://github.com/sponsors/WicketsArcade)
-[![PayPal](https://img.shields.io/badge/Donate-PayPal-blue?style=for-the-badge&logo=paypal)](https://paypal.me/wicketsarcade)
 [![Ko-fi](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-Ko--fi-orange?style=for-the-badge&logo=ko-fi)](https://ko-fi.com/wicket420)
 
 </div>
