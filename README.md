@@ -1,112 +1,157 @@
 # MSFS ATC Auto-Reply v6.0
 
-## 🎮 Credits
-**Original Concept & Design:** Wicket  
-**AutoIt Implementation:** SkyNet  
+<div align="center">
+
+![Version](https://img.shields.io/badge/version-6.0-blue)
+![AutoIt](https://img.shields.io/badge/AutoIt-v3.3.16.1-green)
+![License](https://img.shields.io/badge/license-MIT-orange)
+
+**Automatically respond to ATC in Microsoft Flight Simulator 2024**
+
+[Features](#key-features) • [Installation](#installation) • [Usage](#usage) • [Support](#-support-the-project)
+
+</div>
+
+---
+
+## 👥 Credits
+
+**Created by:**
+- **[Wicket](https://github.com/WicketsArcade)** - Original concept, design & development
+- **SkyNet** - AutoIt implementation & optimization
+
+## 💖 Support the Project
+
+If you find this tool useful, consider supporting its development!
+
+<div align="center">
+
+[![GitHub Sponsor](https://img.shields.io/badge/Sponsor-GitHub-red?style=for-the-badge&logo=github)](https://github.com/sponsors/WicketsArcade)
+[![PayPal](https://img.shields.io/badge/Donate-PayPal-blue?style=for-the-badge&logo=paypal)](https://paypal.me/wicketsarcade)
+[![Ko-fi](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-Ko--fi-orange?style=for-the-badge&logo=ko-fi)](https://ko-fi.com/wicket420)
+
+</div>
+
+Your support helps maintain and improve this project. Thank you! ❤️
+
+---
+
+## 📖 Overview
+
+This AutoIt script automatically responds to ATC in Microsoft Flight Simulator 2024 by pressing Enter at configurable intervals. Version 6.0 is optimized for minimal CPU usage and maximum responsiveness.
+
 **Current Version:** v6.0 (Performance Optimized) ⚡
 
 ---
 
-## Overview
-This AutoIt script automatically responds to ATC in Microsoft Flight Simulator 2024 by pressing Enter at configurable intervals. Version 6.0 is optimized for minimal CPU usage and maximum responsiveness.
-
 ## ✨ What's New in v6.0
+
 - ⚡ **Window Handle Caching** - Caches MSFS window for 5 seconds, eliminates repeated lookups
-- 🚀 **Smart Main Loop** - Dynamic sleep times: 50ms when active, 200ms when idle
-- 📊 **Throttled GUI Checks** - Processes GUI events every 50ms instead of constantly
+- 🚀 **Smart Main Loop** - Dynamic sleep times: 10ms when active, 50ms when idle
+- 📊 **Instant GUI Response** - No more delay when clicking buttons
 - ⏱️ **Reduced Delays** - Optimized window activation and key send timings
 - 💾 **64-bit Compilation** - Better performance on modern systems
 - 🔄 **Early Returns** - Skip unnecessary processing for common cases
 - 🎯 **Immediate Notification Close** - Reuses notification window instead of recreating
 
-## Performance Improvements
+## 📊 Performance Improvements
+
 - **CPU Usage**: Reduced by ~60-70% when idle
 - **Memory**: More efficient notification system
-- **Responsiveness**: Faster GUI updates and key sending
+- **Responsiveness**: Instant button response, faster GUI updates
 - **Window Detection**: 5-second cache = fewer system calls
 
-## Key Features
+---
+
+## 🎯 Key Features
+
 ✅ **Optimized Performance** - Minimal CPU usage, smart caching, efficient loops  
 ✅ **Professional Notifications** - Sleek popups in bottom-right corner  
 ✅ **Reliable Operation** - Uses window activation method that works 100% of the time  
 ✅ **Smart Window Detection** - Targets main MSFS window, avoids popup instrument panels  
 ✅ **Auto Focus Restore** - Returns focus to your previous window after sending keys  
 ✅ **Refuel Hotkey** - Quick Ctrl+Shift+F command for refueling  
-✅ **Global Hotkey** - Ctrl+F8 to toggle on/off from anywhere
+✅ **Global Hotkey** - Ctrl+F8 to toggle on/off from anywhere  
+✅ **Seconds Input** - User-friendly interface (enter 10 for 10 seconds, not 10000ms)
 
-## Requirements
-- AutoIt v3 (download from https://www.autoitscript.com/site/autoit/downloads/)
+---
+
+## 📋 Requirements
+
+- [AutoIt v3](https://www.autoitscript.com/site/autoit/downloads/) (v3.3.16.1 or higher)
 - Microsoft Flight Simulator 2024
+- Windows 10/11
 
-## Installation
+---
 
-### Files Included
-- **MSFS_ATC_AutoReply_v6.au3** - Version 6.0 with performance optimizations
-- **README.md** - This file
+## 🚀 Installation
 
-### Option 1: Run the Script Directly
-1. Install AutoIt v3
-2. Double-click `MSFS_ATC_AutoReply_v6.au3` to run the script
+### Option 1: Download Pre-Compiled EXE (Easiest)
 
-### Option 2: Compile to EXE (Recommended)
-1. Install AutoIt v3 (includes the compiler)
-2. Right-click on `MSFS_ATC_AutoReply_v6.au3`
-3. Select "Compile Script (x64)" for best performance
-4. Run the generated `MSFS_ATC_AutoReply_v6.exe`
+1. Go to [Releases](https://github.com/WicketsArcade/MSFS2024-Auto-ATC-Reply/releases)
+2. Download `MSFS_ATC_AutoReply_v6.exe`
+3. Run the executable
+4. Done! ✨
 
-## Features
+### Option 2: Run the Script Directly
 
-### Main Functions
-- **Auto ATC Reply**: Automatically presses Enter at configurable intervals
-- **Refuel Button**: Sends Ctrl+Shift+F to MSFS for quick refueling
-- **Adjustable Interval**: Set timing between 1ms to any value (default: 10 seconds)
-- **Background Operation**: Works without activating the MSFS window
+1. Install [AutoIt v3](https://www.autoitscript.com/site/autoit/downloads/)
+2. Download `MSFS_ATC_AutoReply.au3`
+3. Double-click to run
+4. Done! ✨
 
-### Controls
-- **Start/Stop Button**: Toggle auto-reply on/off
-- **Interval Field**: Set the time (in milliseconds) between Enter presses
-- **Apply Button**: Apply the new interval setting
-- **Refuel Button**: Send Ctrl+Shift+F command to MSFS
+### Option 3: Compile from Source
 
-### Hotkeys
-- **Ctrl+F8**: Toggle auto-reply on/off (works globally)
+1. Install [AutoIt v3](https://www.autoitscript.com/site/autoit/downloads/)
+2. Download `MSFS_ATC_AutoReply.au3`
+3. Right-click → "Compile Script (x64)"
+4. Run the generated `.exe`
 
-### GUI Options
-- **Close (X) Button**: Choose to exit or minimize to system tray
-- **Status Indicator**: Shows "ON" (green) or "OFF" (red)
+---
 
-## Usage
+## 🎮 Usage
+
+### Quick Start
 
 1. **Start MSFS 2024** first
-2. **Run the script** (either .au3 or .exe)
-3. **Set your desired interval** (e.g., 10 = 10 seconds)
-4. **Click "Apply"** to save the interval
-5. **Click "Start ATC Auto-Reply"** or press **Ctrl+F8**
-6. The script will now automatically press Enter at your set interval
+2. **Run the script** (`.au3` or `.exe`)
+3. **Set interval** (e.g., `10` for 10 seconds)
+4. **Click "Apply"** to save
+5. **Click "Start"** or press **Ctrl+F8**
+6. **Enjoy hands-free ATC!** ✈️
 
-The script will briefly activate MSFS to send the Enter key, then restore focus to your previous window.
+### Controls
 
-## Notification Examples
+| Control | Description |
+|---------|-------------|
+| **Start/Stop Button** | Toggle auto-reply on/off |
+| **Interval Field** | Set time in seconds (default: 10) |
+| **Apply Button** | Save new interval setting |
+| **Refuel Button** | Send Ctrl+Shift+F to MSFS |
+| **Ctrl+F8** | Global hotkey to toggle on/off |
+| **Close (X)** | Exit or minimize to system tray |
 
-You'll see beautiful popup notifications for:
-- 🟢 **Start/Stop** - Green notification when toggling auto-reply
-- 🟢 **Interval Updated** - Shows new timing in seconds and milliseconds
-- 🟢 **Refuel Sent** - Confirms Ctrl+Shift+F was sent successfully
-- 🔴 **Errors** - Red notifications if MSFS window not found
-- 🔵 **Info** - Blue notifications for minimize to tray
-- 🟠 **Warnings** - Orange notifications when stopping
+### Status Indicators
 
-All notifications fade in and out smoothly and appear in the bottom-right corner of your screen.
+- 🟢 **Green "ON"** - Auto-reply is active
+- 🔴 **Red "OFF"** - Auto-reply is disabled
 
-## Window Detection
+---
 
-The script finds MSFS using:
-1. **Primary method**: Window class "AceApp" (most reliable)
-2. **Fallback method**: Window title "Microsoft Flight Simulator 2024"
+## 🔔 Notification System
 
-If MSFS is running, the script should always find it.
+Beautiful color-coded popup notifications appear for all actions:
 
-## Configuration
+- 🟢 **Success** (Green) - Started, interval updated, refuel sent
+- 🔴 **Error** (Red) - MSFS not found, invalid input
+- 🟠 **Warning** (Orange) - Stopped, disabled
+- 🔵 **Info** (Blue) - Minimized to tray
+
+All notifications fade smoothly and appear in the bottom-right corner.
+
+---
+
+## 🔧 Configuration
 
 You can modify these values at the top of the script:
 
@@ -114,64 +159,160 @@ You can modify these values at the top of the script:
 Global Const $WINDOW_TITLE = "Microsoft Flight Simulator 2024"
 Global Const $WINDOW_CLASS = "AceApp"
 Global Const $TOGGLE_HOTKEY = "^{F8}"  ; Ctrl+F8
-Global Const $DEFAULT_INTERVAL = 10000  ; 10 seconds (in milliseconds internally)
+Global Const $DEFAULT_INTERVAL = 10000  ; 10 seconds
 ```
 
-**Note:** The GUI displays and accepts seconds, but the script uses milliseconds internally for precision.
+### Change Hotkey
 
-## Troubleshooting
-
-### Script Not Finding MSFS Window
-1. Make sure MSFS 2024 is actually running
-2. Close any popup instrument panels temporarily
-3. The script targets the largest MSFS window (main game window)
-
-### Keys Not Working
-1. **Run as Administrator** - Right-click and select "Run as Administrator"
-2. Make sure MSFS is not minimized
-3. Verify Ctrl+F8 hotkey is not being used by another application
-
-### Hotkey Not Working
-1. Make sure no other program is using Ctrl+F8
-2. Try changing `$TOGGLE_HOTKEY` to a different key combination
-3. Run as Administrator if hotkey is blocked
-
-## Advanced Customization
-
-### Change the Toggle Hotkey
-Edit this line:
+Edit the hotkey line:
 ```autoit
 Global Const $TOGGLE_HOTKEY = "^{F8}"
 ```
 
-Common key codes:
+**Key Codes:**
 - `^` = Ctrl
 - `!` = Alt  
 - `+` = Shift
 - `#` = Windows key
 
-Examples:
+**Examples:**
 - `^!{F8}` = Ctrl+Alt+F8
 - `^+{F9}` = Ctrl+Shift+F9
 
-### Adjust Default Interval
-Edit this line:
+### Change Default Interval
+
 ```autoit
-Global Const $DEFAULT_INTERVAL = 10000  ; milliseconds (10 seconds)
+Global Const $DEFAULT_INTERVAL = 10000  ; milliseconds
 ```
 
-Remember: The GUI displays seconds, but the code uses milliseconds internally.
+---
 
-## Credits
-- **Original Concept & Design**: Wicket
-- **AutoIt Implementation**: SkyNet
+## 🐛 Troubleshooting
 
-## Version History
-- **v6.0 (Performance Optimized)** ⭐ *Current*: Window caching, smart loops, reduced CPU usage by 60-70%, faster response times
-- **v5.0 (Enhanced Notifications)**: Professional notification system with animations, color-coded alerts
-- **v4.0 (Production Release)**: Clean production version, removed diagnostics
-- **v3.2.x (Beta)**: Testing and development versions
-- **v3.2 (AHK)**: Original AutoHotkey v2.0 version by Wicket
+### Script Not Finding MSFS
 
-## License
-Free to use and modify for personal use.
+1. Make sure MSFS 2024 is running
+2. Close popup instrument panels
+3. Try running as Administrator
+
+### Keys Not Working
+
+1. **Right-click → Run as Administrator**
+2. Ensure MSFS is not minimized
+3. Check Ctrl+F8 isn't used by another app
+
+### Hotkey Not Working
+
+1. Verify no conflicts with other programs
+2. Change `$TOGGLE_HOTKEY` in the script
+3. Run as Administrator
+
+### Button Delay Fixed in v6.0!
+
+If upgrading from an older version, v6.0 eliminates GUI button delays for instant response.
+
+---
+
+## 🔍 How It Works
+
+### Window Detection
+
+1. **Primary**: Searches for window class "AceApp"
+2. **Smart Selection**: Finds largest window (main game, not popups)
+3. **Fallback**: Uses window title if class search fails
+4. **Caching**: Remembers window for 5 seconds to reduce lookups
+
+### Key Sending
+
+1. Caches MSFS window handle
+2. Briefly activates MSFS window (150ms)
+3. Sends Enter key
+4. Restores focus to previous window
+5. **Total disruption**: ~200ms every 10+ seconds
+
+---
+
+## 📚 Advanced Features
+
+### Performance Settings
+
+```autoit
+Global Const $MAIN_LOOP_SLEEP_ACTIVE = 10    ; Fast response when active
+Global Const $MAIN_LOOP_SLEEP_INACTIVE = 50  ; Low CPU when idle
+Global Const $WINDOW_CACHE_TIME = 5000       ; Cache for 5 seconds
+```
+
+### Notification Customization
+
+```autoit
+Global Const $NOTIFICATION_WIDTH = 300
+Global Const $NOTIFICATION_HEIGHT = 80
+Global Const $NOTIFICATION_DISPLAY_TIME = 2500
+```
+
+---
+
+## 📈 Version History
+
+- **v6.0** ⭐ *Current* - Performance optimized, instant GUI response, reduced CPU 60-70%
+- **v5.0** - Professional notification system, color-coded alerts, animations
+- **v4.0** - Production release, removed diagnostics, clean interface
+- **v3.x** - Beta versions, testing various methods
+- **v3.2 (AHK)** - Original AutoHotkey version
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+---
+
+## ⚖️ License
+
+This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
+
+**Free to use and modify for personal use.**
+
+---
+
+## 🔗 Links
+
+- **GitHub Repository**: [MSFS2024-Auto-ATC-Reply](https://github.com/WicketsArcade/MSFS2024-Auto-ATC-Reply)
+- **Issues & Bug Reports**: [Submit an Issue](https://github.com/WicketsArcade/MSFS2024-Auto-ATC-Reply/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/WicketsArcade/MSFS2024-Auto-ATC-Reply/discussions)
+
+---
+
+## 🌟 Star History
+
+If you find this project helpful, please consider giving it a star! ⭐
+
+---
+
+## 📞 Support
+
+Need help? Have questions?
+
+- 💬 [GitHub Discussions](https://github.com/WicketsArcade/MSFS2024-Auto-ATC-Reply/discussions)
+- 🐛 [Report a Bug](https://github.com/WicketsArcade/MSFS2024-Auto-ATC-Reply/issues)
+- ✨ [Request a Feature](https://github.com/WicketsArcade/MSFS2024-Auto-ATC-Reply/issues)
+
+---
+
+<div align="center">
+
+**Made with ❤️ by [Wicket](https://github.com/WicketsArcade) & SkyNet**
+
+If this project helped you, consider [buying me a coffee](https://ko-fi.com/wicket420)! ☕
+
+[![GitHub Stars](https://img.shields.io/github/stars/WicketsArcade/MSFS2024-Auto-ATC-Reply?style=social)](https://github.com/WicketsArcade/MSFS2024-Auto-ATC-Reply/stargazers)
+[![GitHub Forks](https://img.shields.io/github/forks/WicketsArcade/MSFS2024-Auto-ATC-Reply?style=social)](https://github.com/WicketsArcade/MSFS2024-Auto-ATC-Reply/network/members)
+
+</div>
