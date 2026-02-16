@@ -86,26 +86,21 @@ This AutoIt script automatically responds to ATC in Microsoft Flight Simulator 2
 
 ## 🚀 Installation
 
-### Option 1: Download Pre-Compiled EXE (Easiest)
+### Option 1: Run the Script (Recommended)
 
-1. Go to [Releases](https://github.com/WicketsArcade/MSFS2024-Auto-ATC-Reply/releases)
-2. Download `MSFS_ATC_AutoReply_v6.exe`
-3. Run the executable
+1. Install [AutoIt v3](https://www.autoitscript.com/site/autoit/downloads/)
+2. Download `MSFS_ATC_AutoReply.au3` from this repository
+3. Double-click the `.au3` file to run
 4. Done! ✨
 
-### Option 2: Run the Script Directly
+### Option 2: Compile to EXE (Optional)
+
+If you prefer a standalone executable:
 
 1. Install [AutoIt v3](https://www.autoitscript.com/site/autoit/downloads/)
 2. Download `MSFS_ATC_AutoReply.au3`
-3. Double-click to run
-4. Done! ✨
-
-### Option 3: Compile from Source
-
-1. Install [AutoIt v3](https://www.autoitscript.com/site/autoit/downloads/)
-2. Download `MSFS_ATC_AutoReply.au3`
-3. Right-click → "Compile Script (x64)"
-4. Run the generated `.exe`
+3. Right-click the file → "Compile Script (x64)"
+4. Run the generated `.exe` file
 
 ---
 
